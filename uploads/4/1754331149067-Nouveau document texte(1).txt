@@ -1,0 +1,425 @@
+Forms and Data Handling
+
+
+-HTML forms overview
+
+
+
+<form action="/create" method="POST">
+  <label for="fullName">Full Name:</label>
+  <input placeholder="John Doe" type="text" name="fullName" id="fullName">
+  <button type="submit">Submit</button>
+</form>
+
+
+name attribute plays a key role
+
+action: The resource/URL where data is sent  (point to some endpoint on our server)
+
+POST is generally more secure
+
+GET is for forms that don’t modify data, such as search forms
+
+
+-Validation and sanitization
+
+Validation + Sanitization :  cleans user input to prevent malicious data from being processed
+
+--Installing express-validator
+
+
+npm install express-validator
+
+const { body, validationResult } = require("express-validator");
+
+
+-Understanding the body() function
+
+
+req.body : data sent (like from form)
+
+
+The body() function allows you to specify which fields in the request body should be validated and sanitized
+
+[
+  body("birthdate", "Must be a valid date.") //birthdate field + msg if validation fail 
+    .optional({ values: "falsy" }) //optional + skip falsy values
+    .isISO8601() // Enforce a YYYY-MM-DD format.
+];
+
+-Chaining validations
+
+[
+  body("name")
+    .trim()
+    .notEmpty().withMessage("Name can not be empty.")
+    .isAlpha().withMessage("Name must only contain alphabet letters."),  
+];
+
+
+-Escaping user input
+
+We also have to consider situations that do allow those special  characters
+
+
+<div>
+  About Me: <%- description %>!
+</div>
+
+// The client then inputs the following as their page's About Me:
+<script>alert("Hacked!");</script>
+
+<div>
+  About Me: <script>alert("Hacked!");</script>!
+</div>
+
+
+To prevent this cross-site scripting (XSS) attack, we can escape the output (you may also see this referred to as encoding). Escaped HTML replaces special characters
+
+<div>
+  About Me: <%= username %>!
+</div>
+
+// The escaped output is now rendered harmless:
+// About Me: &lt;script&gt;alert(&quot;Hacked!&quot;);&lt;/script&gt;!
+
+
+-Validation results
+
+
+Once the validation rules are applied, you can use validationResult to handle any validation errors:
+
+const controller = (req, res, next) => {
+  const errors = validationResult(req); //array errors
+  if (!errors.isEmpty()) { //there is error
+    return res.status(400).render("index", {
+      errors: errors.array(),
+    });
+  }
+
+  // no error
+  res.redirect("/success");
+};
+
+
+-Forms and Express routes
+
+
+//controller’s functions handle GET/POST request
+
+exports.userUpdateGet = (req, res, next) => {};
+exports.userUpdatePost = (req, res, next) => {};
+
+const { Router } = require("express");
+const usersRouter = Router();
+const usersController = require("../controllers/usersController");
+
+// User update routes
+usersRouter.get("/:id/update", usersController.userUpdateGet);
+usersRouter.post("/:id/update", usersController.userUpdatePost);
+
+module.exports = usersRouter;
+
+
+<form action="/users/<%= user.userId %>/update" method="POST"></form>
+
+-Putting it together
+
+Putting it together
+
+
+npm init -y
+npm install express ejs express-validator
+
+
+Create folders for routes, views, controllers, storages, and an app.js file:
+
+
+// app.js
+const express = require("express");
+const app = express();
+const usersRouter = require("./routes/usersRouter");
+
+app.set("view engine", "ejs");
+app.use(express.urlencoded({ extended: true }));
+app.use("/", usersRouter);
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`Express app listening on port ${PORT}!`));
+
+
+// routes/usersRouter.js
+const { Router } = require("express");
+const usersController = require("../controllers/usersController");
+const usersRouter = Router();
+
+usersRouter.get("/", usersController.usersListGet);
+usersRouter.get("/create", usersController.usersCreateGet);
+usersRouter.post("/create", usersController.usersCreatePost);
+
+module.exports = usersRouter;
+
+
+//views
+
+createUser.ejs will display our user creation form.
+
+<!-- views/index.ejs --> all the users we’ve created.
+<!DOCTYPE html>
+<html>
+<head>
+  <title><%= title %></title>
+</head>
+<body>
+  <h1><%= title %></h1>
+  <ul>
+    <% if (locals.users) {%>
+      <% users.forEach(user => { %>
+        <li>
+          ID: <%= user.id %>, Name: <%= user.firstName %> <%= user.lastName %>
+        </li>
+      <% }); %>
+    <% } %>
+  </ul>
+  <a href="/create">Create a user</a>
+</body>
+</html>
+
+<!-- views/createUser.ejs -->
+<!DOCTYPE html>
+<html>
+  <head>
+    <title><%= title %></title>
+  </head>
+<body>
+  <h1><%= title %></h1>
+  <form action="/create" method="POST">
+    <label for="firstName">First Name: </label>
+    <input type="text" name="firstName" id="firstName" required>
+    <label for="lastName">Last Name: </label>
+    <input type="text" name="lastName" id="lastName" required>
+    <button type="submit">Submit</button>
+  </form>
+  <a href="/">Back to home</a>
+</body>
+</html>
+
+
+//controller
+
+// controllers/usersController.js
+const usersStorage = require("../storages/usersStorage");
+
+exports.usersListGet = (req, res) => {
+  res.render("index", {
+    title: "User list",
+    users: usersStorage.getUsers(),
+  });
+};
+
+exports.usersCreateGet = (req, res) => {
+  res.render("createUser", {
+    title: "Create user",
+  });
+};
+
+exports.usersCreatePost = (req, res) => {
+  const { firstName, lastName } = req.body;
+  usersStorage.addUser({ firstName, lastName });
+  res.redirect("/");
+};
+
+
+// storages/usersStorage.js
+// This class lets us simulate interacting with a database.
+class UsersStorage {
+  constructor() {
+    this.storage = {};
+    this.id = 0;
+  }
+
+  addUser({ firstName, lastName }) {
+    const id = this.id;
+    this.storage[id] = { id, firstName, lastName };
+    this.id++;
+  }
+
+  getUsers() {
+    return Object.values(this.storage);
+  }
+
+  getUser(id) {
+    return this.storage[id];
+  }
+
+  updateUser(id, { firstName, lastName }) {
+    this.storage[id] = { id, firstName, lastName };
+  }
+
+  deleteUser(id) {
+    delete this.storage[id];
+  }
+}
+// Rather than exporting the class, we can export an instance of the class by instantiating it.
+// This ensures only one instance of this class can exist, also known as the "singleton" pattern.
+module.exports = new UsersStorage();
+
+
+
+node --watch app.js
+
+add a few methods to our usersController.js for validating and sanitizing
+
+// This just shows the new stuff we're adding to the existing contents
+const { body, validationResult } = require("express-validator");
+
+const alphaErr = "must only contain letters.";
+const lengthErr = "must be between 1 and 10 characters.";
+
+const validateUser = [ //array rules
+  body("firstName").trim()
+    .isAlpha().withMessage(`First name ${alphaErr}`)
+    .isLength({ min: 1, max: 10 }).withMessage(`First name ${lengthErr}`),
+  body("lastName").trim()
+    .isAlpha().withMessage(`Last name ${alphaErr}`)
+    .isLength({ min: 1, max: 10 }).withMessage(`Last name ${lengthErr}`),
+];
+
+// We can pass an entire array of middleware validations to our controller.
+exports.usersCreatePost = [ //array of middleware in order? , "I want to handle this POST request by first validating input (validateUser), and then running this final logic if everything’s okay." 
+  validateUser, //pass it to controller
+  (req, res) => {
+    const errors = validationResult(req); //of previ middleware , return errors array
+    if (!errors.isEmpty()) {
+      return res.status(400).render("createUser", {
+        title: "Create user",
+        errors: errors.array(),
+      });
+    }
+    const { firstName, lastName } = req.body;
+    usersStorage.addUser({ firstName, lastName });
+    res.redirect("/");
+  }
+];
+
+
+<!-- views/partials/errors.ejs -->
+<% if (locals.errors) {%>
+  <ul>
+    <% errors.forEach(function(error) { %>
+      <li><%= error.msg %></li>
+    <% }); %>
+  </ul>
+<% } %>
+
+
+
+<%- include("partials/errors.ejs") %> // above form of createUser.ejs.
+
+
+
+Now that we can create users, we also need a way to modify them. Let’s create a form that lets us specify an ID and the values we want to update by making a new view: updateUser.ejs.
+
+<!-- views/updateUser.ejs -->
+<!DOCTYPE html>
+<html>
+  <head>
+    <title><%= title %></title>
+  </head>
+<body>
+  <h1><%= title %></h1>
+  <%- include("partials/errors.ejs") %>
+  <form action="/<%= user.id %>/update" method="POST">
+    <input type="text" name="firstName" value="<%= user.firstName %>" required>
+    <input type="text" name="lastName" value="<%= user.lastName %>" required>
+    <button type="submit">Update User</button>
+  </form>
+  <a href="/">Back to home</a>
+</body>
+</html>
+
+
+//index.ejs , “Update” button next to each user
+
+<li>
+  ID: <%= user.id %>, Name: <%= user.firstName %> <%= user.lastName %>
+  <a href="/<%= user.id %>/update">Update</a>
+</li>
+
+
+//routes for updating them
+
+usersRouter.get("/:id/update", usersController.usersUpdateGet);
+usersRouter.post("/:id/update", usersController.usersUpdatePost);
+
+
+//controller
+
+exports.usersUpdateGet = (req, res) => {
+  const user = usersStorage.getUser(req.params.id);
+  res.render("updateUser", {
+    title: "Update user",
+    user: user,
+  });
+};
+
+exports.usersUpdatePost = [
+  validateUser,
+  (req, res) => {
+    const user = usersStorage.getUser(req.params.id);
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).render("updateUser", {
+        title: "Update user",
+        user: user,
+        errors: errors.array(),
+      });
+    }
+    const { firstName, lastName } = req.body;
+    usersStorage.updateUser(req.params.id, { firstName, lastName });
+    res.redirect("/");
+  }
+];
+
+
+//let’s add a way to delete users
+
+<!-- In views/index.ejs -->
+<ul>
+  <% if (locals.users) {%>
+    <% users.forEach(function(user) { %>
+      <li>ID: <%= user.id %>, Name: <%= user.firstName %> <%= user.lastName %></li>
+      <a href="/<%= user.id %>/update">Update</a>
+      <!-- This time we're sending a POST request to our route, so we need a form. -->
+      <form action="/<%= user.id %>/delete" method="POST" style="display:inline;">
+        <button type="submit" onclick="return confirm('Are you sure you want to delete this user?');">Delete</button>
+      </form>
+    <% }); %>
+  <% } %>
+</ul>
+
+
+//logic
+
+// Tell the server to delete a matching user, if any. Otherwise, respond with an error.
+exports.usersDeletePost = (req, res) => {
+  usersStorage.deleteUser(req.params.id);
+  res.redirect("/");
+};
+
+
+//route
+
+usersRouter.post("/:id/delete", usersController.usersDeletePost);
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+
+    <h1>File</h1>
+
+    
+    <button><a href="/folder/<%=FolderID%>">back</a></button>
+
+    
+    <% if(file){ %>
+
+        <li><%=file.originalName%>
+        <br>
+        <%=file.createdAt%>
+        <br>
+        <%=file.size%> octet
+        <br>
+        <form action="/folder/<%=FolderID%>/file/<%=file.id%>/download" method="post">
+            <button>Download</button>
+        </form>
+        </li>
+
+    <% } %>
+
+    
+</body>
+</html>

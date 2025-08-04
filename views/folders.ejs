@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+
+    <h1>Folders List</h1>
+
+    
+    <button><a href="/">Home</a></button>
+
+
+    <button><a href="/folder/new">add folder</a></button>
+
+    
+    <% if(folders){ %>
+
+        <ul>
+            <% folders.forEach((dir)=>{ %>
+
+                <li><%=dir.name%> <button><a href="/folder/<%=dir.id%>">View</a></button> 
+                
+                    <button><a href="/folder/<%=dir.id%>/update">Update</a></button> 
+                    
+                   <form action="/folder/<%=dir.id%>/delete" method="POST" style="display:inline" >
+                     <button>Delete</button>
+                   </form>
+                
+                </li>
+
+            <% }) %>
+        </ul>
+
+    <% } %>
+
+    
+</body>
+</html>

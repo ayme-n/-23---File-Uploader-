@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+
+    <h1>Folders <%=id%> Files </h1>
+
+    
+    <button><a href="/folders">Folders</a></button>
+
+    <br>
+    <button><a href="/folder/<%=id%>/upload">upload file</a></button>
+
+    
+    <% if(files){ %>
+
+        <ul>
+            <% files.forEach((file)=>{ %>
+
+                <li><%=file.originalName%> <button><a href="/folder/<%=id%>/file/<%=file.id%>">View</a></button> <button>Update</button> <button>Delete</button></li>
+
+            <% }) %>
+        </ul>
+
+    <% } %>
+
+    
+</body>
+</html>

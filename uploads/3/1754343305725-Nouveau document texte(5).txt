@@ -1,0 +1,216 @@
+Prisma ORM
+
+
+-Challenges with raw SQLin’
+
+Writing raw SQL  becomes  repetitive.
+
+Raw SQL offers no centralized view of the database schema. (not visible in the code))
+
+When your app changes, your database has to change too (With raw SQL, you write these changes by hand)
+
+
+-Prisma Schema
+
+The Prisma schema is a file where you will define your models
+
+
+model Message {
+   id        Int      @id @default(autoincrement())
+   content   String   @db.VarChar(255) 
+   createdAt DateTime @default(now())
+   author    User     @relation(fields: [authorId], references: [id])
+   authorId  Int     
+}
+
+model User {
+   // user's fields
+}
+
+
+This schema file lives in your codebase and is tracked by version control
+
+
+-Prisma Client
+
+
+to interact with your database
+
+// instantiate the client
+import { PrismaClient } from '@prisma/client';
+const prisma = new PrismaClient();
+
+//insert
+
+await prisma.message.create({ //The prisma.message object exists because of your schema model
+   data: {
+      content: 'Hello, world!',
+      authorId: 1
+   }
+})
+
+const messages = await prisma.message.findMany(); //select * 
+
+
+npx prisma generate // after create/edit schema 
+
+-Prisma Migrate
+
+When you decide to change the schema in any way, you run a Prisma migration to apply the schema changes to the database These changes are tracked in a migrations folder in your codebase.*
+
+
+note : 
+
+
+PostgreSQL use Identity , Prisma ORM use Serial instead for IDs
+
+_____
+
+
+-Create project setup
+
+npm init -y
+npm install prisma --save-dev
+
+npx prisma
+
+npx prisma init --datasource-provider postgresql --output ../generated/prisma //prisma/schema.prisma file with database config.
+
+-Connect your database
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL") //DATABASE_URL="postgresql://johndoe:randompassword@localhost:5432/mydb?schema=public"
+
+
+}
+
+-Using Prisma Migrate
+
+model Post {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  title     String   @db.VarChar(255)
+  content   String?
+  published Boolean  @default(false)
+  author    User     @relation(fields: [authorId], references: [id])
+  authorId  Int
+}
+
+model Profile {
+  id     Int     @id @default(autoincrement())
+  bio    String?
+  user   User    @relation(fields: [userId], references: [id])
+  userId Int     @unique
+}
+
+model User {
+  id      Int      @id @default(autoincrement())
+  email   String   @unique
+  name    String?
+  posts   Post[]
+  profile Profile?
+}
+
+
+
+npx prisma migrate dev --name init //map your data model to the database schema , generate is called under the hood by default
+
+
+-Install Prisma Client
+
+npm install @prisma/client
+
+
+npx prisma generate //read  Prisma schema and generates the Prisma Client
+
+
+-Querying the database
+
+--Write your first query
+
+//index.js
+
+const { PrismaClient } = require('./generated/prisma')
+
+const prisma = new PrismaClient()
+
+async function main() {
+  const allUsers = await prisma.user.findMany()
+  console.log(allUsers)
+
+}
+
+main()
+  .then(async () => {
+    await prisma.$disconnect()
+  })
+  .catch(async (e) => {
+    console.error(e)
+    await prisma.$disconnect()
+    process.exit(1)
+  })
+
+
+node index.js //empty because no users
+
+
+
+--Write data into the database
+
+async function main() {
+
+//creates a new User record together with new Post and Profile records using a nested write query
+
+The User record is connected to the two other ones via the Post.author ↔ User.posts and Profile.user ↔ User.profile 
+
+  await prisma.user.create({
+    data: {
+      name: 'Alice',
+      email: 'alice@prisma.io',
+      posts: {
+        create: { title: 'Hello World' },
+      },
+      profile: {
+        create: { bio: 'I like turtles' },
+      },
+    },
+  })
+
+  const allUsers = await prisma.user.findMany({
+    include: { //to include the posts and profile relations on the returned User objects.
+      posts: true,
+      profile: true,
+    },
+  })
+  console.dir(allUsers, { depth: null })
+}
+
+
+node index.js
+
+
+//update
+
+async function main() {
+  const post = await prisma.post.update({
+    where: { id: 1 },
+    data: { published: true },
+  })
+  console.log(post)
+}
+
+
+
+
+
+
+
+
+
+PRISMA STTUDIO?
+
+https://marketplace.visualstudio.com/items?itemName=Prisma.prisma + Auto formatting
+
+

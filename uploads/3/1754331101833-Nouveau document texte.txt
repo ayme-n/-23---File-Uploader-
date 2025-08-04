@@ -1,0 +1,190 @@
+Deployment
+
+
+-What are hosting providers?
+
+They own servers and rent space on them to customers, who can then use the space to store their websites and make them accessible to anyone on the web. ( GitHub pages is great for hosting static web pages for free but not dymanic )
+
+-Static vs dynamic sites
+
+static : HTML, CSS JavaScript 
+
+dymanic: + server-side application and a database (like  youtube videos based on followers)
+
+
+ many hosting providers  : complex (AWS,Googe Cloud,Microsoft Azure) to begginer platform as a service (PaaS) providers like Railway and Render
+
+
+-What is a PaaS?
+
+
+allows us as developers to focus more of our time on building our applications instead of configuring and managing the servers they run on.
+
+
+-How do PaaS services work?
+
+PaaS providers work by giving you easy access to a few resources that any Node app can’t live without to function on the web.
+
+
+--Instances
+
+The first and most crucial thing PaaS providers you are virtual “computers” called instances which run your app
+
+Basically, one instance means a single instance of your application running at one time. That’s like having a single computer run your app like you do on Localhost. Multiple instances are like having several copies of your app running simultaneously, which allows you to handle more traffic.
+
+
+For most of your apps, one instance is plenty enough
+
+--Databases
+
+
+The second most important thing PaaS providers give you is databases They make it easy to spin up a new database for each app by doing all the setup and configuration for you (+  automatic backups / updated with the latest critical security patches)   You never want to be in a position where you’re waking at 4 am to multiple alerts. Your database is on the fritz because of some security patch you forgot to apply, and there are no backups to fall back on.
+
+
+--Domain names
+
+PaaS providers will give you a random domain name when you first deploy.
+
+In the real world, you’ll want to link it to your own custom domain, for example, http://mycooldomain.com (no need for protfolio)
+
+
+purchase a domain from a registrar like Porkbun or NameSilo.
+
+
+Once you have your domain, you need to point it to your project. The provider you are using will have exhaustive documentation on using custom domain names on their platform.
+
+To find a new domain, try using Domainr.
+
+
+-Our recommended PaaS services
+
+
+The downside is that they all have very limited free tiers > range of options instead of just one
+
+--Railway.app
+
+Can deploy both servers and databases.
+
+-Railway has a convenient deployment process. You link to your project’s GitHub repo.
+
+-$5 a month should be enough to host four applications.
+
+Railway.app: Free Plan
+
+You get a free one-time grant of $5 on their free trial,the longevity depends on how many resources you consume. 
+
+docm : https://docs.railway.com/
+
+--Render
+
+Can deploy both servers and databases.
+
+-Render allows you to deploy using “Blueprints”, which link to your project’s GitHub repo.
+
+-databases are separate on Render, and the lowest spec databases cost $7 each.
+
+-$21 a month is enough to host three applications as each app’s database will cost $7.
+
+Render: Free Plan
+
+-750 hours of free usage per month. , Applications are put to sleep automatically after 15 minutes of inactivity, so the 750 free hours should be enough to host a few apps for the entire month.
+
+doc : https://render.com/docs/
+
+guide : https://render.com/docs/deploy-node-express-app
+
+video : https://www.youtube.com/watch?v=bnCOyGaSe84&ab_channel=CodeBrah
+
+--Koyeb
+
+Can deploy both servers and databases.
+
+Easily Git push to deploy / 10 free custom domains
+
+Koyeb: Free Plan
+
+One free Web service / Postgres database (50 hours). / no credit card 
+
+doc : https://www.koyeb.com/docs
+
+guide : https://www.koyeb.com/docs/deploy/express
+
+
+--Neon
+
+Can deploy databases only.
+
+24/7 for your main database. (20 additional hours of database branching)
+Point-in-time restore (last 24 Hours)
+
+Neon: Free Plan
+
+0.5 GB
+24/7 for your main compute
+No credit card required
+
+Neon: Links
+
+doc : https://neon.com/docs/introduction
+
+guide : https://neon.com/docs/guides/node
+
+
+--Aiven
+
+Can deploy databases only.
+
+automatic backups.
+Point-in-time recovery (varies by service).
+
+Aiven: Free Plan
+
+5 GB
+24/7 
+One free database for every services (PostgreSQL/MySQL)
+no cc
+
+Aiven: Links
+
+doc : https://aiven.io/docs/get-started
+
+guide : https://aiven.io/docs/products/postgresql/howto/connect-node
+
+
+-Debugging and troubleshooting deployments
+
+
+They especially have a habit of popping up when deploying to a new environment like a hosting provider. When this happens, the key is not to panic and to follow a calm, step-by-step debugging process.
+
+These errors are well documented and often have solutions you can find with a little bit of Google-fu
+
+
+There are two stages of the deployment process where you are most likely to encounter problems
+
+--Node version compatibility
+
+The supported and default Node.js versions vary by host provider. Check their documentation to see what's available. If your code uses specific features, you may need to define compatible Node versions in your `package.json`.  : https://docs.npmjs.com/cli/v10/configuring-npm/package-json#engines
+
+
+--On deployment
+
+
+ the first thing to do is to check the build logs. and find the point where the deployment encountered the error
+
+
+--After deployment
+
+After deploying your app, you might encounter a **500 Internal Server Error**, which are intentionally unclear to avoid  exposing security details. To diagnose the issue, check your **application logs** — they show real-time activity, including requests and database queries. By refreshing your app and watching the logs, you can often identify or get clues about the problem.
+
+
+--Going further with troubleshooting tools
+
+As your application grows, you’ll want to get more sophisticated with your error-tracking tools. For example, you can use services like Sentry to track and monitor errors using a slick, easy-to-use interface and get notified when they happen.
+
+
+--One final tip
+
+
+If your latest deployment breaks something, **go back to the last working version** to identify what changed. Then, **reintroduce changes gradually**.
+Your **Git skills** are key here — use `git log` to review recent changes and `git checkout` to quickly revert to a stable version.
+

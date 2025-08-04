@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+
+    <h1>Sign Up</h1>
+
+    
+    <button><a href="/">Home</a></button>
+
+    
+    <form action="/signup" method="POST">
+
+
+        <label for="username" >username</label>
+        <input type="text" name="username" value="AAA">
+
+        <br>
+
+        <label for="password">password</label>
+        <input type="password" name="password"  value="a">
+
+        <br>
+
+        <label for="confirm_password">confirm password</label>
+        <input type="password" name="confirm_password" value="a">
+
+        <br>
+
+        <input type="submit" value="Sign-un">
+
+        <br>
+
+        <p>have account ?  <button><a href="/login">Login</a></button></p>
+
+
+    </form>
+
+    <%- include("errors.ejs")%>
+    
+</body>
+</html>
